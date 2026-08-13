@@ -9,7 +9,17 @@ import {
   type ToolRunContext,
   type ValueSchemaSpec,
 } from '@deepseek-ai/dsh-tools'
+import { existsSync, readdirSync, statSync } from 'node:fs'
+import path from 'node:path'
 import { runOrrJson } from './runner.ts'
+import {
+  generateSkillSkeleton,
+  installSkill,
+  resolveSkillTarget,
+  summarizeEvidence,
+  validateSkillDraft,
+  validateSkillName,
+} from './skillCreate.ts'
 
 const PERMISSIONS_TIMEOUT_MS = 300_000 // first call compiles the Swift recorder
 const RECORD_START_TIMEOUT_MS = 300_000
@@ -178,5 +188,107 @@ export function createRecordReplayTools(ctx: Context, options: RecordReplayToolO
     presentCall: (args) => ({ card: 'generic', title: 'Prepare skill input package', rawInput: args }),
   })
 
-  return [permissionsCheck, recordStart, recordStop, sessionEvents, sessionValidate, skillPrepare]
+  const skillCreate = defineTool({
+    name: 'orr_skill_create',
+    description:
+      'Create a reusable skill from a recorded session, following the '
+      + 'Anthropic skills spec (github.com/anthropics/skills — skill-creator): '
+      + 'install to <target>/<name>/SKILL.md with YAML frontmatter (name + '
+      + 'description) and a progressive-disclosure body. If the host agent has '
+      + 'a native Skill Creator skill, prefer it; this tool is the built-in '
+      + 'fallback. Call ONCE WITHOUT `draft` to generate a spec-shaped skeleton '
+      + 'from the evidence (plus an evals/evals.json placeholder), review and '
+      + 'rewrite it (final description, steps, verification, privacy), then call '
+      + 'AGAIN with the finished SKILL.md as `draft` to validate and install it. '
+      + 'The skill becomes discoverable in the DSH skill catalog on the next '
+      + 'model step (filesystem provider watches skill roots).',
+    parameters: {
+      session: { type: 'string', description: 'Session id, or "latest". Defaults to "latest".' },
+      name: { type: 'string', required: true, description: 'Skill name, lowercase kebab-case, e.g. "send-file-demo".' },
+      description: { type: 'string', description: 'Optional skill description. When omitted (skeleton mode), a candidate is left as a TODO for the agent to finalize.' },
+      draft: { type: 'string', description: 'Optional complete SKILL.md body (frontmatter included) to validate and install instead of the generated skeleton.' },
+      runs: { type: 'string', description: `Recordings directory (relative to the session workspace). Defaults to "${runsOut}".` },
+      target: { type: 'string', description: 'Optional install directory (absolute or workspace-relative). Defaults to ~/.agents/skills.' },
+      overwrite: { type: 'boolean', description: 'When true, replace an existing skill with the same name. Default false.' },
+    },
+    output: { schema: OPEN_OBJECT_SCHEMA, render: renderJson },
+    timeoutMs: DEFAULT_TIMEOUT_MS,
+    async execute(args, exec) {
+      const name = (args.name ?? '').trim()
+      const nameError = validateSkillName(name)
+      if (nameError !== null) throw new Error(nameError)
+      const cwd = cwdOf(exec)
+      const runsDir = path.join(cwd, args.runs ?? runsOut, 'sessions')
+      const sessionId = (args.session ?? 'latest').trim()
+      const resolvedSession = sessionId === 'latest' ? latestSessionId(runsDir) : sessionId
+      if (resolvedSession === undefined) {
+        throw new Error(`no recording session found under ${runsDir} (record one first with orr_record_start)`)
+      }
+      const eventsPath = path.join(runsDir, resolvedSession, 'events.jsonl')
+      const summary = summarizeEvidence(eventsPath)
+      const target = resolveSkillTarget(args.target, cwd)
+
+      const problems: string[] = []
+      let content: string
+      let status: 'installed' | 'draft-installed'
+      if (args.draft !== undefined && args.draft.trim() !== '') {
+        problems.push(...validateSkillDraft(name, args.draft))
+        if (problems.length > 0) {
+          return {
+            name,
+            session_id: resolvedSession,
+            status: 'validation-failed',
+            problems,
+            next: 'Fix the reported problems and call orr_skill_create again with the corrected draft.',
+          }
+        }
+        content = args.draft
+        status = 'installed'
+      } else {
+        content = generateSkillSkeleton(summary, name, args.description)
+        status = 'draft-installed'
+      }
+      const installed = installSkill({ target, name, content, overwrite: args.overwrite === true })
+      const actions: JsonValue[] = summary.actions.slice(0, 60).map(a => {
+        const plain: Record<string, JsonValue> = { kind: a.kind }
+        if (a.app !== undefined) plain.app = a.app
+        if (a.semantic !== undefined) plain.semantic = a.semantic
+        return plain
+      })
+      return {
+        name,
+        session_id: resolvedSession,
+        status,
+        skill_path: installed.skillPath,
+        ...(installed.evalsPath !== undefined ? { evals_path: installed.evalsPath } : {}),
+        existed: installed.existed,
+        evidence: {
+          apps: summary.apps,
+          urls: summary.urls,
+          window_titles: summary.windowTitles,
+          action_counts: summary.actionCounts,
+          actions,
+        },
+        next: status === 'draft-installed'
+          ? 'Skeleton installed. Review and rewrite the SKILL.md (description with trigger contexts, steps, verification, privacy), then call orr_skill_create again with the final body as `draft`.'
+          : `Skill installed. It appears in the skill catalog on the next model step. Optionally add evals (see evals/evals.json) per the Anthropic skill-creator spec.`,
+      }
+    },
+    presentCall: (args) => ({ card: 'generic', title: 'Create skill from recording', rawInput: args }),
+  })
+
+  return [permissionsCheck, recordStart, recordStop, sessionEvents, sessionValidate, skillPrepare, skillCreate]
+}
+
+/** Resolve "latest" to the most recently modified session directory under `sessionsDir`. */
+function latestSessionId(sessionsDir: string): string | undefined {
+  if (!existsSync(sessionsDir)) return undefined
+  let latest: { id: string; mtime: number } | undefined
+  for (const entry of readdirSync(sessionsDir)) {
+    const eventsPath = path.join(sessionsDir, entry, 'events.jsonl')
+    if (!existsSync(eventsPath)) continue
+    const mtime = statSync(eventsPath).mtimeMs
+    if (latest === undefined || mtime > latest.mtime) latest = { id: entry, mtime }
+  }
+  return latest?.id
 }

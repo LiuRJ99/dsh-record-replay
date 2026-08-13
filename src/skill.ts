@@ -7,9 +7,10 @@ export const RECORD_REPLAY_SKILL_NAME = 'open-record-replay'
 export const RECORD_REPLAY_SKILL_CONTENT = `# Open Record/Replay
 
 Use this capability to learn a user-demonstrated macOS workflow: record the
-user's real desktop actions into structured evidence, then hand a packaged
-evidence directory to the host agent's native skill creator. Open Record/Replay
-records evidence; it does not write the final skill by itself.
+user's real desktop actions into structured evidence, then turn that evidence
+into a reusable skill. If the host has a native Skill Creator, hand the
+evidence package to it; otherwise use the built-in \`orr_skill_create\` flow
+(which follows the Anthropic skills spec) as the fallback.
 
 ## Workflow
 
@@ -23,9 +24,19 @@ records evidence; it does not write the final skill by itself.
 5. Read \`orr_session_events\` to understand what the user actually did
    (app/window attribution, mouse.click, mouse.drag, keyboard.text_input,
    keyboard.submit, selection.changed, accessibility context).
-6. Package the evidence with \`orr_skill_prepare\`. Hand the returned directory
-   to the host agent's native skill creator; do not stop at a summary or a
-   Markdown runbook unless the user explicitly asks for only that.
+6. Create the skill:
+   - If the host has a native Skill Creator skill, package the evidence with
+     \`orr_skill_prepare\` and hand the returned directory to it.
+   - Otherwise use the built-in fallback \`orr_skill_create\`: call it once
+     without \`draft\` to generate a spec-shaped skeleton from the evidence,
+     rewrite the SKILL.md (final description, steps, verification, privacy),
+     then call it again with the finished body as \`draft\` to validate and
+     install it. The generated skill follows the Anthropic skills spec
+     (github.com/anthropics/skills): kebab-case \`name\`, a \`description\` that
+     states when to trigger and what it does, a progressive-disclosure body,
+     and an optional \`evals/evals.json\`.
+7. Do not stop at a summary or a Markdown runbook unless the user explicitly
+   asks for only that.
 
 ## Interpreting events
 

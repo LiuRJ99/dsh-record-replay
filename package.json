@@ -1,6 +1,6 @@
 {
   "name": "dsh-record-replay",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "DeepSeek Harness plugin: model-facing orr_* tools plus the open-record-replay skill for the Open Record/Replay macOS workflow recorder.",
   "keywords": [
     "deepseek",

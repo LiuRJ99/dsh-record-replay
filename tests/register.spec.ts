@@ -23,6 +23,7 @@ describe('dsh-record-replay registration contracts', () => {
       'orr_session_events',
       'orr_session_validate',
       'orr_skill_prepare',
+      'orr_skill_create',
     ])
   })
 

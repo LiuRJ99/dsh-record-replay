@@ -79,6 +79,7 @@ and skill packages land where the agent's filesystem tools can read them.
 | `orr_session_events` | `session events` | Read the evidence stream (`events.jsonl`), capped at `limit` events. |
 | `orr_session_validate` | `session validate-recording` | Check the recording against the official contract. |
 | `orr_skill_prepare` | `skill prepare` | Build the evidence package for the host skill creator. |
+| `orr_skill_create` | — (built-in) | **Built-in skill creation fallback.** Generates a SKILL.md skeleton from a recorded session following the [Anthropic skills spec](https://github.com/anthropics/skills) (kebab-case name + description frontmatter, progressive-disclosure body, `evals/evals.json`), validates agent-authored drafts, and installs to `~/.agents/skills/<name>/`. Prefer a host-native Skill Creator when one exists; this is the fallback. |
 
 ## Development
 
