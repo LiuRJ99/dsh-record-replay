@@ -29,22 +29,16 @@ user demonstrates a workflow
 
 ## Install
 
-Build the package and add it to a profile as a bundle:
+This fork commits its build output, so a `github:` install needs no build step:
 
 ```bash
-git clone https://github.com/<you>/dsh-record-replay.git
-cd dsh-record-replay
-pnpm install
-pnpm build
-pnpm pack                      # produces dsh-record-replay-0.1.0.tgz
-dsh plugin --profile web add ./dsh-record-replay-0.1.0.tgz
+dsh plugin --profile web add github:LiuRJ99/dsh-record-replay#v0.3.0
 ```
 
 `dsh plugin add` records the package in the profile's `package.json`
-dependencies and `dsh.profile.bundles`, and the harness heals the
-`profiles/node_modules` fallback so the bundle resolves. The shipped
-`cordis.patch.yml` mounts a neutral row; point it at your checkout by overlaying
-the row from your profile's `cordis.patch.yml`:
+dependencies and `dsh.profile.bundles`. The shipped `cordis.patch.yml` mounts a
+neutral row; point it at your checkout by overlaying the row from your profile's
+`cordis.patch.yml`:
 
 ```yaml
 - id: record-replay
@@ -54,8 +48,54 @@ the row from your profile's `cordis.patch.yml`:
     skillInputsOut: 'skill-inputs'
 ```
 
-The profile patch file is hot-reloaded, so the running GUI picks the plugin up
-without a restart. Restart the Harness if you are not on a live profile.
+**Restart the Harness after installing.** The profile patch layer is
+hot-reloaded, but that reload re-reads the patch *file* only — it reuses the
+bundle list snapshot taken at boot. A profile that already booted without this
+bundle will not mount it until `dsh web` is restarted.
+
+To build from source instead:
+
+```bash
+pnpm install
+node scripts/link-dsh.mjs   # links @deepseek-ai/* from a DSH harness
+pnpm build
+pnpm pack
+dsh plugin --profile web add ./dsh-record-replay-0.3.0.tgz
+```
+
+## Gating (dsh-tool-lazy-gate)
+
+The skill registers with `invocation: { modelInvocable: false, userInvocable:
+true }` and publishes the association the lazy gate discovers:
+
+```ts
+metadata: { 'dsh:gate': { toolPrefixes: ['orr_'], promptSections: [] } }
+```
+
+Wire it up in the profile's gate config:
+
+```yaml
+capabilities:
+  recorder:
+    enabled: true
+    skillNames: [open-record-replay]
+```
+
+While locked, the `orr_*` tools are hidden from the model catalog *and* rejected
+at execution, so a recording cannot start unless the user asks for one. That
+matters because `orr_record_start` installs a global keyboard hook that captures
+typed text verbatim.
+
+**Unlock by typing `/open-record-replay`.** That gesture is the only unlock
+path: a model call to the skill tool produces a `tool/call`, which the gate
+never treats as an unlock. The practical consequence is that a plain-language
+request ("record me doing X") does **not** activate recording — the gesture is
+required. Drop the gate config if you prefer model-initiated use, and accept
+that only the tool descriptions then constrain when recording starts.
+
+Without this metadata the gate silently drops the configured `skillNames` and
+the capability never engages, so the association is required rather than
+optional. `tests/register.spec.ts` asserts the contract.
 
 ## Configuration
 

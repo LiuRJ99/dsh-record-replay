@@ -4,11 +4,11 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import {
   defineTool,
-  type JsonValue,
   type ToolDefinition,
   type ToolRunContext,
   type ValueSchemaSpec,
 } from '@deepseek-ai/dsh-tools'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import { existsSync, readdirSync, statSync } from 'node:fs'
 import path from 'node:path'
 import { runOrrJson } from './runner.ts'

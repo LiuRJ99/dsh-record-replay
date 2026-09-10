@@ -2,5 +2,10 @@ node_modules/
 .npmrc
 *.tgz
 .DS_Store
-lib/
 dist/
+
+# lib/ is deliberately NOT ignored: git-hosted installs
+# (dsh plugin add github:<owner>/dsh-record-replay#<tag>) must work without
+# running build scripts, because pnpm >=10 blocks lifecycle scripts of
+# git-hosted dependencies unless the consumer allowlists them. The compiled
+# entries therefore have to ship in the snapshot itself.

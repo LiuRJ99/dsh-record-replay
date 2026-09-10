@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs'
 import path from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import type { SubprocessOutputRead } from '@deepseek-ai/dsh-subprocess'
-import type { JsonValue } from '@deepseek-ai/dsh-tools'
+import type { JsonValue } from '@deepseek-ai/dsh-util-values'
 import type { ResolvedRecordReplayConfig } from './config.ts'
 import { RecordReplayConfigError } from './config.ts'
 
