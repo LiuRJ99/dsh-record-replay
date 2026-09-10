@@ -88,4 +88,7 @@ their open-record-replay checkout.
 - A DeepSeek Harness installation.
 - macOS (the Open Record/Replay native recorder is Swift).
 - An open-record-replay checkout whose `bin/orr.js` the plugin invokes
-  (configured via `repoRoot` or `cliPath`).
+  (configured via `repoRoot` or `cliPath`). Use the
+  [LiuRJ99 fork](https://github.com/LiuRJ99/open-record-replay), not upstream:
+  upstream resolves its Swift package against `process.cwd()`, which fails for
+  every tool call when the CLI runs with the session workspace as cwd.

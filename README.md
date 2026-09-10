@@ -68,25 +68,42 @@ If upstream ever lands the two fixes above, this fork's remaining value is the
 gate association alone — and that could be contributed upstream instead of
 maintained here.
 
-### Known prerequisite
+### Required recorder fork
 
-The recorder's `buildNativeMacOSRecorder()` resolves its Swift package against
-`process.cwd()`, while this plugin intentionally runs the CLI with the session
-workspace as its working directory. The two disagree, so `orr_permissions_check`
-and `orr_record_start` fail from any directory that is not the
-open-record-replay checkout. The fix belongs upstream in
-[open-record-replay](https://github.com/humblebanana/open-record-replay)
-(`packages/core-engine/src/store.mjs` — resolve the package from
-`import.meta.url`, not `process.cwd()`); until it lands, that patch has to be
-applied to the recorder checkout itself.
+**Use the recorder fork, not upstream.** This plugin deliberately runs the CLI
+with the session workspace as its working directory, so `runs/` and
+`skill-inputs/` land where the agent's filesystem tools can read them. Upstream's
+recorder disagrees: `buildNativeMacOSRecorder()` locates its own Swift package
+with `path.resolve(process.cwd(), "packages/platform-macos")`, which assumes the
+CLI is invoked from the checkout root. Every `orr_*` call then dies with
+`error: chdir error: No such file or directory (2)` — `orr_permissions_check` and
+`orr_record_start` alike, so the whole tool family is dead, not just recording.
+
+It is a genuine upstream bug rather than a mismatched assumption: the same file's
+`resolveRunRoot()` maps `--out` against cwd on purpose, so the CLI is *designed*
+to run from anywhere. Only its own native-package lookup uses the wrong anchor.
+
+The fix is carried in
+[LiuRJ99/open-record-replay](https://github.com/LiuRJ99/open-record-replay)
+(`packages/core-engine/src/store.mjs` resolves the package from
+`import.meta.url` instead), so clone that instead of upstream:
+
+```bash
+git clone https://github.com/LiuRJ99/open-record-replay.git
+cd open-record-replay && npm install && npm run build:native
+```
+
+Point `repoRoot` at that checkout. If you build upstream's recorder instead,
+apply the fork's `ceb884a` by hand or every tool call fails the same way.
 
 ## Requirements
 
 - macOS (the recorder's native backend is Swift; it needs Xcode Command Line Tools).
 - Node.js `>= 22.19` (the Harness runtime).
 - A DeepSeek Harness installation.
-- An [open-record-replay](https://github.com/humblebanana/open-record-replay)
-  checkout whose `bin/orr.js` the plugin invokes.
+- A [LiuRJ99/open-record-replay](https://github.com/LiuRJ99/open-record-replay)
+  checkout whose `bin/orr.js` the plugin invokes (see
+  [Required recorder fork](#required-recorder-fork)).
 
 ## Install
 
