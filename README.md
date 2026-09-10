@@ -4,7 +4,7 @@ A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) plugin tha
 turns the [Open Record/Replay](https://github.com/humblebanana/open-record-replay)
 macOS workflow recorder into first-class harness capabilities.
 
-It registers the **`open-record-replay` skill** and **six model-facing `orr_*`
+It registers the **`open-record-replay` skill** and **seven model-facing `orr_*`
 tools**, so an agent can learn a user-demonstrated desktop workflow: record the
 user's real macOS actions, validate the evidence, and package it for the host
 agent's native skill creator.
@@ -18,6 +18,67 @@ user demonstrates a workflow
   -> orr_skill_prepare           (package a skill-input directory)
   -> host skill creator
 ```
+
+## About this fork
+
+This is a fork of
+[humblebanana/dsh-record-replay](https://github.com/humblebanana/dsh-record-replay),
+maintained at
+[LiuRJ99/dsh-record-replay](https://github.com/LiuRJ99/dsh-record-replay)
+(upstream base `0.2.0`, fork release `0.3.0`).
+
+It exists for two reasons: the upstream release no longer compiles against the
+current DeepSeek Harness, and this deployment wants the recorder behind a
+session-lazy gate rather than always reachable by the model. Everything
+upstream does, this fork still does — the delta is deliberately small and
+localized:
+
+| | upstream `0.2.0` | this fork `0.3.0` |
+|---|---|---|
+| Typecheck on DSH ≥ `0.1.2-rc.1` | fails — `@deepseek-ai/dsh-tools` stopped re-exporting `JsonValue` | imports `JsonValue` from `@deepseek-ai/dsh-util-values` |
+| `github:` install | ships no build output (`lib/` was gitignored) | `lib/` is committed, so install runs no build step |
+| Activation when gated | model- or user-initiated | **user gesture only** — `/open-record-replay` |
+| Gate association | absent; a configured gate drops the capability silently | `metadata['dsh:gate']` publishing `toolPrefixes: ['orr_']` |
+| Registration tests | 23 | 26, including three gate-association guards |
+
+The gate association is the substantive addition. While locked, the `orr_*`
+tools are hidden from the model catalog *and* rejected at execution, so a
+recording cannot begin on the model's own initiative. That matters here because
+`orr_record_start` installs a global keyboard hook that captures typed text
+verbatim — including anything the user types into it by accident. See
+[Gating](#gating-dsh-tool-lazy-gate) for the configuration and for what the
+gesture requirement costs you.
+
+### Syncing with upstream
+
+```bash
+git remote add upstream https://github.com/humblebanana/dsh-record-replay.git
+git fetch upstream
+git merge upstream/main     # the delta is small; conflicts stay localized
+pnpm build                  # REQUIRED before every commit — see below
+pnpm test
+```
+
+**`lib/` is committed, so always rebuild before committing.** Nothing else
+generates it: a `github:` install consumes the committed `lib/` as-is, so a
+`src/` change that ships without a fresh `pnpm build` publishes stale behaviour
+with no error anywhere.
+
+If upstream ever lands the two fixes above, this fork's remaining value is the
+gate association alone — and that could be contributed upstream instead of
+maintained here.
+
+### Known prerequisite
+
+The recorder's `buildNativeMacOSRecorder()` resolves its Swift package against
+`process.cwd()`, while this plugin intentionally runs the CLI with the session
+workspace as its working directory. The two disagree, so `orr_permissions_check`
+and `orr_record_start` fail from any directory that is not the
+open-record-replay checkout. The fix belongs upstream in
+[open-record-replay](https://github.com/humblebanana/open-record-replay)
+(`packages/core-engine/src/store.mjs` — resolve the package from
+`import.meta.url`, not `process.cwd()`); until it lands, that patch has to be
+applied to the recorder checkout itself.
 
 ## Requirements
 

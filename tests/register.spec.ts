@@ -13,7 +13,7 @@ describe('dsh-record-replay registration contracts', () => {
     expect(Config).toBeDefined()
   })
 
-  it('registers the skill and all six tools through the real registries', () => {
+  it('registers the skill and all seven tools through the real registries', () => {
     const { ctx, tools, skills } = stubCtx()
     apply(ctx, { cliPath: FIXTURE_CLI })
     expect(skills).toEqual(['open-record-replay'])
