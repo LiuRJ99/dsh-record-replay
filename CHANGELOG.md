@@ -5,6 +5,44 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-09-10
+
+Documentation and build-configuration follow-up to 0.3.0. No runtime behaviour
+changes: the plugin's `lib/` output is byte-identical, so upgrading from 0.3.0 is
+only worthwhile for the docs and for a working `pnpm install`.
+
+### Fixed
+
+- **`pnpm install` refused to run, which also broke `pnpm validate`.** The
+  repository shipped `pnpm-workspace.yaml` with an unanswered prompt template,
+  `allowBuilds: esbuild: set this to true or false`. pnpm 11 reads that key as an
+  unresolved build decision and aborts the whole install with
+  `[ERR_PNPM_IGNORED_BUILDS] Ignored build scripts: esbuild@0.28.2` and exit code
+  1 — so the documented `pnpm validate` path (`AGENTS.md`) failed even though
+  `tsc` and `vitest` both pass once dependencies exist. Upstream CI never caught
+  it because it runs `npm ci`. Set to `true`, matching what `npm ci` does.
+
+- **The Chinese README described the pre-fork state.** `README.zh.md` had not been
+  touched since the initial commit, so it pointed the recorder prerequisite at
+  `humblebanana/open-record-replay` (whose recorder fails every `orr_*` call when
+  the CLI runs with the session workspace as cwd), claimed six `orr_*` tools and
+  listed six (`orr_skill_create` was added in 0.2.0), and omitted the fork section
+  entirely — no rationale, no upstream delta, no sync procedure, no gating
+  section. The English `README.md` received all of that in `d1bc33c` and `af8b4a0`.
+
+- **The fork's own clone instructions pointed at upstream.** Both readings of the
+  recorder prerequisite, and `docs/PUBLISHING.md`, now name
+  [LiuRJ99/open-record-replay](https://github.com/LiuRJ99/open-record-replay) and
+  pin its first tagged release,
+  [`v0.1.1`](https://github.com/LiuRJ99/open-record-replay/releases/tag/v0.1.1),
+  which carries the cwd fixes plus a macOS 13 / Swift 5.9 deployment target.
+  Upstream's `swift-tools-version: 5.10` / `platforms: [.macOS(.v14)]` does not
+  build on macOS 13 with Xcode 15.2 at all.
+
+### Changed
+
+- Version, install examples and the fork-comparison table updated to `0.3.1`.
+
 ## [0.3.0] - 2026-09-10
 
 Fork of `humblebanana/dsh-record-replay` (base 0.2.0), maintained at

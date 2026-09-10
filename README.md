@@ -25,7 +25,7 @@ This is a fork of
 [humblebanana/dsh-record-replay](https://github.com/humblebanana/dsh-record-replay),
 maintained at
 [LiuRJ99/dsh-record-replay](https://github.com/LiuRJ99/dsh-record-replay)
-(upstream base `0.2.0`, fork release `0.3.0`).
+(upstream base `0.2.0`, fork release `0.3.1`).
 
 It exists for two reasons: the upstream release no longer compiles against the
 current DeepSeek Harness, and this deployment wants the recorder behind a
@@ -33,7 +33,7 @@ session-lazy gate rather than always reachable by the model. Everything
 upstream does, this fork still does — the delta is deliberately small and
 localized:
 
-| | upstream `0.2.0` | this fork `0.3.0` |
+| | upstream `0.2.0` | this fork `0.3.1` |
 |---|---|---|
 | Typecheck on DSH ≥ `0.1.2-rc.1` | fails — `@deepseek-ai/dsh-tools` stopped re-exporting `JsonValue` | imports `JsonValue` from `@deepseek-ai/dsh-util-values` |
 | `github:` install | ships no build output (`lib/` was gitignored) | `lib/` is committed, so install runs no build step |
@@ -83,15 +83,20 @@ It is a genuine upstream bug rather than a mismatched assumption: the same file'
 `resolveRunRoot()` maps `--out` against cwd on purpose, so the CLI is *designed*
 to run from anywhere. Only its own native-package lookup uses the wrong anchor.
 
-The fix is carried in
-[LiuRJ99/open-record-replay](https://github.com/LiuRJ99/open-record-replay)
-(`packages/core-engine/src/store.mjs` resolves the package from
-`import.meta.url` instead), so clone that instead of upstream:
+The fixes are carried in
+[LiuRJ99/open-record-replay](https://github.com/LiuRJ99/open-record-replay),
+released as [`v0.1.1`](https://github.com/LiuRJ99/open-record-replay/releases/tag/v0.1.1),
+so clone that instead of upstream:
 
 ```bash
 git clone https://github.com/LiuRJ99/open-record-replay.git
-cd open-record-replay && npm install && npm run build:native
+cd open-record-replay && git checkout v0.1.1
+npm install && npm run build:native
 ```
+
+That release also lowers the native recorder's deployment target to macOS 13 /
+Swift 5.9, which upstream's `swift-tools-version: 5.10` / `platforms: [.macOS(.v14)]`
+does not allow — on macOS 13 with Xcode 15.2 upstream does not build at all.
 
 Point `repoRoot` at that checkout. If you build upstream's recorder instead,
 apply the fork's `ceb884a` by hand or every tool call fails the same way.
@@ -110,7 +115,7 @@ apply the fork's `ceb884a` by hand or every tool call fails the same way.
 This fork commits its build output, so a `github:` install needs no build step:
 
 ```bash
-dsh plugin --profile web add github:LiuRJ99/dsh-record-replay#v0.3.0
+dsh plugin --profile web add github:LiuRJ99/dsh-record-replay#v0.3.1
 ```
 
 `dsh plugin add` records the package in the profile's `package.json`
@@ -138,7 +143,7 @@ pnpm install
 node scripts/link-dsh.mjs   # links @deepseek-ai/* from a DSH harness
 pnpm build
 pnpm pack
-dsh plugin --profile web add ./dsh-record-replay-0.3.0.tgz
+dsh plugin --profile web add ./dsh-record-replay-0.3.1.tgz
 ```
 
 ## Gating (dsh-tool-lazy-gate)

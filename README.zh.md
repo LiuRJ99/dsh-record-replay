@@ -23,13 +23,13 @@
 这是 [humblebanana/dsh-record-replay](https://github.com/humblebanana/dsh-record-replay)
 的 fork，维护于
 [LiuRJ99/dsh-record-replay](https://github.com/LiuRJ99/dsh-record-replay)
-（上游基线 `0.2.0`，fork 版本 `0.3.0`）。
+（上游基线 `0.2.0`，fork 版本 `0.3.1`）。
 
 它存在有两个理由：上游版本已无法在当前 DeepSeek Harness 上编译；本部署要求录制器
 挂在会话级 lazy gate 之后，而不是模型随时可达。上游能做的一切，本 fork 仍然能做——
 差异是刻意保持小且局部的：
 
-| | 上游 `0.2.0` | 本 fork `0.3.0` |
+| | 上游 `0.2.0` | 本 fork `0.3.1` |
 |---|---|---|
 | 在 DSH ≥ `0.1.2-rc.1` 上的 typecheck | 失败——`@deepseek-ai/dsh-tools` 不再重新导出 `JsonValue` | 从 `@deepseek-ai/dsh-util-values` 导入 `JsonValue` |
 | `github:` 安装 | 不含构建产物（`lib/` 曾被 gitignore） | `lib/` 已提交，安装时不跑构建 |
@@ -71,14 +71,19 @@ pnpm test
 这是上游的真实 bug，而非假设不一致：同一文件的 `resolveRunRoot()` 有意把 `--out`
 相对 cwd 解析，说明 CLI 就是*设计*成可从任意目录运行的，只有它自己的原生包查找用错了锚点。
 
-修复由 [LiuRJ99/open-record-replay](https://github.com/LiuRJ99/open-record-replay) 承载
-（`packages/core-engine/src/store.mjs` 改为从 `import.meta.url` 解析），所以请克隆它
-而不是上游：
+修复由 [LiuRJ99/open-record-replay](https://github.com/LiuRJ99/open-record-replay) 承载，
+以 [`v0.1.1`](https://github.com/LiuRJ99/open-record-replay/releases/tag/v0.1.1) 发布，
+所以请克隆它而不是上游：
 
 ```bash
 git clone https://github.com/LiuRJ99/open-record-replay.git
-cd open-record-replay && npm install && npm run build:native
+cd open-record-replay && git checkout v0.1.1
+npm install && npm run build:native
 ```
+
+该版本还把原生录制器的部署目标降到 macOS 13 / Swift 5.9，而上游的
+`swift-tools-version: 5.10` / `platforms: [.macOS(.v14)]` 不允许这么做——
+在 macOS 13 配 Xcode 15.2 的机器上，上游根本编译不过。
 
 把 `repoRoot` 指向该检出目录即可。若你坚持构建上游录制器，就要手工应用该 fork 的
 `ceb884a`，否则每次工具调用都会以同样方式失败。
@@ -97,7 +102,7 @@ cd open-record-replay && npm install && npm run build:native
 本 fork 提交了构建产物，因此 `github:` 安装无需构建步骤：
 
 ```bash
-dsh plugin --profile web add github:LiuRJ99/dsh-record-replay#v0.3.0
+dsh plugin --profile web add github:LiuRJ99/dsh-record-replay#v0.3.1
 ```
 
 `dsh plugin add` 会写入 profile 的 `package.json`（dependencies + `dsh.profile.bundles`）。
@@ -123,7 +128,7 @@ pnpm install
 node scripts/link-dsh.mjs   # 从 DSH harness 链接 @deepseek-ai/*
 pnpm build
 pnpm pack
-dsh plugin --profile web add ./dsh-record-replay-0.3.0.tgz
+dsh plugin --profile web add ./dsh-record-replay-0.3.1.tgz
 ```
 
 ## 门控（dsh-tool-lazy-gate）
