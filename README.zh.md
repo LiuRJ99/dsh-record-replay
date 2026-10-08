@@ -18,6 +18,12 @@
   -> 宿主 skill creator
 ```
 
+## DSH 0.2.0-rc.2 候选适配
+
+当前源码版本：`0.3.3-dev.1`。DSH 兼容声明精确固定到 `0.2.0-rc.2`，未验证 `0.2.1-alpha.1`。以下旧 release/tag 示例保留为历史说明；本轮验证请使用 [插件目录的固定提交和本地验证说明](https://github.com/LiuRJ99/awesome-dsh-plugins/blob/main/docs/dsh-0.2.0-rc.2.zh-CN.md)，不要安装旧 tag 或裸 npm 包名。
+
+26 项测试和构建通过；使用录制器 fork v0.1.1 验证了 Host 激活。原生录制和回放仍需本地 macOS 验证。
+
 ## 关于本 fork
 
 这是 [humblebanana/dsh-record-replay](https://github.com/humblebanana/dsh-record-replay)
