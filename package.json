@@ -1,6 +1,6 @@
 {
   "name": "dsh-record-replay",
-  "version": "0.3.3-dev.1",
+  "version": "0.3.3-dev.2",
   "description": "DeepSeek Harness plugin: model-facing orr_* tools plus the open-record-replay skill for the Open Record/Replay macOS workflow recorder.",
   "keywords": [
     "deepseek",
@@ -43,18 +43,27 @@
       "patch": "./cordis.patch.yml"
     },
     "compatibility": {
-      "dsh": "0.2.0-rc.2"
+      "dsh": "0.2.0-rc.2 || 0.2.1-rc.1"
     }
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.4",
-    "@deepseek-ai/dsh-skill": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-subprocess": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-tools": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-util-values": "0.2.0-rc.2",
+    "@deepseek-ai/dsh-skill": "0.2.0-rc.2 || 0.2.1-rc.1",
+    "@deepseek-ai/dsh-subprocess": "0.2.0-rc.2 || 0.2.1-rc.1",
+    "@deepseek-ai/dsh-tools": "0.2.0-rc.2 || 0.2.1-rc.1",
+    "@deepseek-ai/dsh-util-values": "0.2.0-rc.2 || 0.2.1-rc.1",
     "@deepseek-ai/schemastery": "^3.18.4"
   },
   "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.5",
+    "@deepseek-ai/dsh-llm": "0.2.1-rc.1",
+    "@deepseek-ai/dsh-sandbox": "0.2.1-rc.1",
+    "@deepseek-ai/dsh-scope": "0.2.1-rc.1",
+    "@deepseek-ai/dsh-skill": "0.2.1-rc.1",
+    "@deepseek-ai/dsh-subprocess": "0.2.1-rc.1",
+    "@deepseek-ai/dsh-tools": "0.2.1-rc.1",
+    "@deepseek-ai/dsh-util-values": "0.2.1-rc.1",
+    "@deepseek-ai/schemastery": "3.18.5",
     "@types/node": "^22.20.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"

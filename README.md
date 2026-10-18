@@ -19,9 +19,9 @@ user demonstrates a workflow
   -> host skill creator
 ```
 
-## DSH 0.2.0-rc.2 candidate adaptation
+## DSH release compatibility
 
-Current source version: `0.3.3-dev.1`. DSH compatibility is pinned to `0.2.0-rc.2`; `0.2.1-alpha.1` has not been tested. Older release/tag examples below are historical. For this validation round, use the [catalog's pinned commits and local validation guide](https://github.com/LiuRJ99/awesome-dsh-plugins/blob/main/docs/dsh-0.2.0-rc.2.zh-CN.md) rather than an older tag or an unqualified npm name.
+Current source version: `0.3.3-dev.2`. Host compatibility: `0.2.0-rc.2 || 0.2.1-rc.1`. Use the fixed release source in the [plugin catalog](https://github.com/LiuRJ99/awesome-dsh-plugins#plugin-catalog).
 
 26 tests and the build passed; Host activation was verified with the recorder fork at v0.1.1. Native recording and replay still require local macOS validation.
 

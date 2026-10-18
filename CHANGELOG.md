@@ -1,3 +1,9 @@
+## 0.3.3-dev.2 — 2026-10-18
+
+Align the build SDK and Host peers with 0.2.1-rc.1 while retaining the namespace plugin, bounded subprocess runner and workspace-relative recording artifacts.
+
+Compatibility is restricted to `0.2.0-rc.2 || 0.2.1-rc.1`; no alpha or later Host is implied.
+
 # Changelog
 
 All notable changes to this project are documented in this file.
