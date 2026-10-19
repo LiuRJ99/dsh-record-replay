@@ -21,7 +21,7 @@ user demonstrates a workflow
 
 ## DSH release compatibility
 
-Current source version: `0.3.3-dev.2`. Host compatibility: `0.2.0-rc.2 || 0.2.1-rc.1`. Use the fixed release source in the [plugin catalog](https://github.com/LiuRJ99/awesome-dsh-plugins#plugin-catalog).
+Current source version: `0.3.3-dev.3`. Host compatibility: `>=0.2.0-rc.2`. Use the fixed release source in the [plugin catalog](https://github.com/LiuRJ99/awesome-dsh-plugins#plugin-catalog).
 
 26 tests and the build passed; Host activation was verified with the recorder fork at v0.1.1. Native recording and replay still require local macOS validation.
 
@@ -227,3 +227,7 @@ stubbed subprocess service; `node scripts/link-dsh.mjs --path <dir>` points the
 ## License
 
 MIT — see [LICENSE](./LICENSE).
+
+## Host compatibility policy
+
+The minimum Host requirement is `>=0.2.0-rc.2`. Newer DSH versions remain eligible by default; narrow the range or adapt the implementation only when an incompatibility is confirmed. Do not maintain an allowlist of individual RCs. Fixed build SDK versions describe build inputs, not the allowed Host versions. Installation sources stay pinned to releases/tags. Qualification evidence is recorded separately: an eligible future Host is not automatically a tested Host.
